@@ -1,19 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { Routes, Route } from "react-router-dom";
+import { useState } from "react";
+import MainLayout from "./layouts/MainLayout";
+import Products from "./pages/Products";
+import AddProduct from "./pages/AddProduct";
+
+import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [products, setProducts] = useState([]);
+
+  const addProduct = (product) => {
+    setProducts([...products, product]);
+    toast.success("Product added!");
+  };
+
+  const deleteProduct = (id) => {
+    setProducts(products.filter((p) => p.id !== id));
+    toast.error("Product deleted!");
+  };
+
+  const updateProduct = (updatedProduct) => {
+    setProducts(
+      products.map((p) =>
+        p.id === updatedProduct.id ? updatedProduct : p
+      )
+    );
+    toast.success("Product updated!");
+  };
 
   return (
-    <>
-      <div className="underline text-3xl font-bold">
-        <p>Hello, Vite + React!</p>
-      </div>
-    </>
-  )
+    <MainLayout>
+      <Toaster />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Products
+              products={products}
+              deleteProduct={deleteProduct}
+              updateProduct={updateProduct}
+            />
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            <Products
+              products={products}
+              deleteProduct={deleteProduct}
+              updateProduct={updateProduct}
+            />
+          }
+        />
+        <Route
+          path="/add-product"
+          element={<AddProduct addProduct={addProduct} />}
+        />
+      </Routes>
+    </MainLayout>
+  );
 }
 
-export default App
+export default App;
