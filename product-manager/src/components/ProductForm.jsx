@@ -1,10 +1,11 @@
 import { useState } from "react";
+import axios from "axios";
 
 function ProductForm({ addProduct }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [images, setImages] = useState([]);
-  const [category, setCategory] = useState(""); // ✅ added
+  const [category, setCategory] = useState("");
   const [preview, setPreview] = useState([]);
 
   const handleImageChange = (e) => {
@@ -17,25 +18,56 @@ function ProductForm({ addProduct }) {
     setPreview(previewUrls);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const newProduct = {
-      id: Date.now(),
-      name,
-      price,
-      category, // ✅ added
-      image: preview[0] || "https://picsum.photos/400/300"
-    };
+    try {
+      const formData = new FormData();
 
-    addProduct(newProduct);
+      formData.append("name", name);
+      formData.append("price", price);
+      formData.append("category", category);
 
-    // reset form
-    setName("");
-    setPrice("");
-    setCategory(""); // ✅ reset
-    setImages([]);
-    setPreview([]);
+      // ✅ MULTIPLE IMAGE SUPPORT
+      images.forEach((img) => {
+        formData.append("images", img);
+      });
+
+      const res = await axios.post(
+        "http://localhost:5000/api/products",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log(res.data);
+
+      // UI update fallback
+      if (addProduct) {
+        addProduct({
+          id: Date.now(),
+          name,
+          price,
+          category,
+          images: preview,
+        });
+      }
+
+      alert("Product Added ✅");
+
+      setName("");
+      setPrice("");
+      setCategory("");
+      setImages([]);
+      setPreview([]);
+
+    } catch (err) {
+      console.log(err);
+      alert("Error adding product ❌");
+    }
   };
 
   return (
@@ -52,8 +84,7 @@ function ProductForm({ addProduct }) {
           <label className="text-sm text-gray-600">Product Name</label>
           <input
             type="text"
-            placeholder="Enter product name"
-            className="border mt-1 p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border mt-1 p-2 w-full rounded"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -63,18 +94,16 @@ function ProductForm({ addProduct }) {
           <label className="text-sm text-gray-600">Price</label>
           <input
             type="number"
-            placeholder="Enter price"
-            className="border mt-1 p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border mt-1 p-2 w-full rounded"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
           />
         </div>
 
-        {/* 🔥 CATEGORY (NEW FEATURE) */}
         <div>
           <label className="text-sm text-gray-600">Category</label>
           <select
-            className="border mt-1 p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border mt-1 p-2 w-full rounded"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
@@ -85,8 +114,7 @@ function ProductForm({ addProduct }) {
           </select>
         </div>
 
-        {/* Upload */}
-        <div className="border-2 border-dashed border-gray-300 p-6 rounded-lg text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
+        <div className="border-2 border-dashed p-6 rounded-lg text-center cursor-pointer">
           <input
             type="file"
             multiple
@@ -94,20 +122,18 @@ function ProductForm({ addProduct }) {
             className="hidden"
             id="fileUpload"
           />
-          <label htmlFor="fileUpload" className="cursor-pointer text-gray-600">
+          <label htmlFor="fileUpload" className="cursor-pointer">
             📸 Click or Drag images here
           </label>
         </div>
 
-        {/* Preview */}
         {preview.length > 0 ? (
           <div className="grid grid-cols-3 gap-3">
             {preview.map((src, i) => (
               <div key={i} className="relative">
                 <img
                   src={src}
-                  alt="preview"
-                  className="w-full h-24 object-cover rounded-lg shadow"
+                  className="w-full h-24 object-cover rounded-lg"
                 />
                 <button
                   type="button"
@@ -130,7 +156,7 @@ function ProductForm({ addProduct }) {
           </p>
         )}
 
-        <button className="bg-blue-500 hover:bg-blue-600 text-white w-full py-2 rounded-lg font-medium shadow transition">
+        <button className="bg-blue-500 text-white w-full py-2 rounded-lg">
           Upload Product
         </button>
       </form>

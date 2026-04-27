@@ -1,12 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import ProductCard from "./ProductCard";
 
-function ProductList({ products, deleteProduct, updateProduct }) {
+function ProductList({ deleteProduct, updateProduct }) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/products")
+      .then((res) => {
+        setProducts(res.data);
+      })
+      .catch((err) => console.log(err));
+  }, []);
 
   const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name
+    const matchesSearch = (product.name || "")
       .toLowerCase()
       .includes(search.toLowerCase());
 
@@ -20,15 +31,13 @@ function ProductList({ products, deleteProduct, updateProduct }) {
   return (
     <div className="max-w-7xl mx-auto">
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        
+
         <div>
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="text-gray-500 text-sm">Manage your products</p>
         </div>
 
-        {/* 🔍 Search */}
         <input
           type="text"
           placeholder="Search..."
@@ -37,7 +46,6 @@ function ProductList({ products, deleteProduct, updateProduct }) {
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        {/* 🔥 Category Filter */}
         <select
           className="border p-2 rounded w-full md:w-48"
           value={categoryFilter}
@@ -51,7 +59,6 @@ function ProductList({ products, deleteProduct, updateProduct }) {
 
       </div>
 
-      {/* Grid */}
       {filteredProducts.length === 0 ? (
         <p className="text-center text-gray-500">No products found</p>
       ) : (
